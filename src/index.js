@@ -1,6 +1,5 @@
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
-var base58check = require('bs58check')
 
 // http://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 var calculateTransactionSize = function (inputCount, outputCount) {
@@ -76,8 +75,12 @@ module.exports.encode = function (filename, options, callback) {
     throw new Error('options.changeAddress parameter should be a string')
   }
 
-  if (!options.keyPair && !options.WIF) {
-    throw new Error('options.keyPair or options.WIF should be specified')
+  if (!options.WIF) {
+    throw new Error('options.WIF is missing')
+  }
+
+  if (!(typeof options.WIF === 'string' || options.WIF instanceof String)) {
+    throw new Error('options.changeAddress parameter should be a string')
   }
 
   if (!callback) {
@@ -103,35 +106,30 @@ module.exports.encode = function (filename, options, callback) {
       }
 
       var tx = new bitcoin.TransactionBuilder(bitcoin.networks[options.network])
-
       tx.addInput(options.input.hash, options.input.index)
 
       var outputCount = Math.ceil(data.length / 20)
-
       var outputCost = outputCount * bitcoin.networks[options.network].dustThreshold
 
-      var size = calculateTransactionSize(1, outputCount)
-
       // http://bitcoin.stackexchange.com/questions/7537/calculator-for-estimated-tx-fees
-      var calculatedFee = size * 50
+      var calculatedFee = 50 * calculateTransactionSize(1, outputCount)
 
       var totalAmount = outputCost + calculatedFee
 
       for (var i = 0; i < data.length; i += 20) {
-        var buffer = new Buffer(21)
+        var version
 
-        if (options.network.toLowerCase() === 'testnet') {
-          buffer[0] = 0x6f
+        if (options.network === 'testnet') {
+          version = 0x6f
         } else {
-          buffer[0] = 0x00
+          version = 0x00
         }
 
-        data.copy(buffer, 1, i, i + 20)
-
-        var address = base58check.encode(buffer)
+        var buffer = new Buffer(20)
+        data.copy(buffer, 1)
 
         try {
-          bitcoin.address.fromBase58Check(address)
+          address = bitcoin.address.toBase58Check(buffer, version)
         } catch (error) {
           return callback(new Error('Invalid ' + options.network + ' address: ' + address))
         }
@@ -141,17 +139,9 @@ module.exports.encode = function (filename, options, callback) {
 
       tx.addOutput(options.changeAddress, options.amount - totalAmount)
 
-      if (options.keyPair) {
-        tx.sign(0, options.keyPair)
-      } else if (options.WIF) {
-        var keyPair = bitcoin.ECPair.fromWIF(options.WIF, bitcoin.networks[options.network])
+      tx.sign(0, bitcoin.ECPair.fromWIF(options.WIF, bitcoin.networks[options.network]))
 
-        tx.sign(0, keyPair)
-      } else {
-        return callback(new Error('No credentials given'))
-      }
-
-      callback(null, tx)
+      callback(null, tx.build())
     })
   })
 }

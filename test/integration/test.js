@@ -26,26 +26,22 @@ var bitcoin_options = {
 describe('coinfs', function() {
   it('can generate a transaction for testnet', function(done) {
     coinfs.encode('./test/integration/test.txt', testnet_options, function(err, transaction) {
-      var built = transaction.build()
-
       assert(err == null)
-      assert(built.ins.length == 1)
-      assert(built.outs.length == 29)
-      assert(built.outs[0].value == 546)
-      assert(built.outs[28].value == 49925612)
+      assert(transaction.ins.length == 1)
+      assert(transaction.outs.length == 29)
+      assert(transaction.outs[0].value == 546)
+      assert(transaction.outs[28].value == 49925612)
       done()
     })
   })
 
-  it('can generate a transaction for bistcoin', function(done) {
+  it('can generate a transaction for bitcoin', function(done) {
     coinfs.encode('./test/integration/test.txt', bitcoin_options, function(err, transaction) {
-      var built = transaction.build()
-      console.log(built.toHex())
       assert(err == null)
-      assert(built.ins.length == 1)
-      assert(built.outs.length == 29)
-      assert(built.outs[0].value == 546)
-      assert(built.outs[28].value == 49925612)
+      assert(transaction.ins.length == 1)
+      assert(transaction.outs.length == 29)
+      assert(transaction.outs[0].value == 546)
+      assert(transaction.outs[28].value == 49925612)
       done()
     })
   })
