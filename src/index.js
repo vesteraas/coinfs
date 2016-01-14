@@ -1,7 +1,6 @@
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
 var base58check = require('bs58check')
-var minimumFee = 546 // http://bitcoin.stackexchange.com/questions/17830/whats-the-minimum-transaction-with-bitcoin
 
 // http://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 var calculateTransactionSize = function (inputCount, outputCount) {
@@ -133,7 +132,7 @@ module.exports.encode = function (filename, options, callback) {
 
         try {
           bitcoin.address.fromBase58Check(address)
-        } catch(error) {
+        } catch (error) {
           return callback(new Error('Invalid ' + options.network + ' address: ' + address))
         }
 

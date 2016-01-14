@@ -4,18 +4,21 @@
   "description": "Store files in Bitcoin transactions",
   "main": "./src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "integration": "mocha test/integration/",
     "standard": "standard",
     "unit": "mocha",
     "test": "npm run standard && npm run unit"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Werner Kvalem Vesterås <wvesteraas@gmail.com>",
+  "license": {
+    "type": "MIT",
+    "url": "http://opensource.org/licenses/MIT"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/vesteraas/coinfs.git"
   },
+  "keywords": ["bitcoin", "blockchain"],
   "dependencies": {
     "bitcoin": "3.0.1",
     "bitcoinjs-lib": "2.1.4",
