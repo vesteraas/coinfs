@@ -18,7 +18,7 @@
     "type": "git",
     "url": "https://github.com/vesteraas/coinfs.git"
   },
-  "keywords": ["bitcoin", "blockchain"],
+  "keywords": ["bitcoin", "blockchain", "transaction"],
   "dependencies": {
     "bitcoin": "3.0.1",
     "bitcoinjs-lib": "2.1.4",
