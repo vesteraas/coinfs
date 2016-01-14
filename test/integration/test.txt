@@ -1,0 +1,7 @@
+I’ve been working on bitcoin’s design) since 2007. At some point I became convinced there was a way to do this without any trust required at all and couldn’t resist to keep thinking about it.
+
+Lost coins only make everyone else’s coins worth slightly more. Think of it as a donation to everyone.
+
+Sorry to be a wet blanket. Writing a description for (bitcoin) for general audiences is bloody hard. There’s nothing to relate it to.
+
+I’m sure that in 20 years there will either be very large (bitcoin) transaction volume or no volume.

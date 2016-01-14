@@ -1,0 +1,30 @@
+{
+  "name": "coinfs",
+  "version": "0.0.1",
+  "description": "Store files in Bitcoin transactions",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "integration": "mocha test/integration/",
+    "standard": "standard",
+    "unit": "mocha",
+    "test": "npm run standard && npm run unit"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vesteraas/coinfs.git"
+  },
+  "dependencies": {
+    "bitcoin": "3.0.1",
+    "bitcoinjs-lib": "2.1.4",
+    "bs58check": "1.0.6",
+    "bigi": "1.4.1",
+    "crypto": "0.0.3"
+  },
+  "devDependencies": {
+    "mocha": "2.3.4",
+    "standard": "5.4.1"
+  }
+}
