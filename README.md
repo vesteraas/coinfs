@@ -17,7 +17,7 @@ The generated transaction is a [**bitcoinjs-lib**](https://github.com/bitcoinjs/
 ```javascript
 var coinfs = require('coinfs')
 
-var bitcoin_options = {
+var options = {
   network: 'bitcoin', // [bitcoin|testnet]
   amount: 0.5 * 100000000               // Satoshis in TX output,
   inputs: [{
@@ -25,8 +25,7 @@ var bitcoin_options = {
     index: 1,                           // Index of TX output
     WIF: '5J115WhqnVmZuD1xe4jc1g...'    // Private key of output address
   }],
-  changeAddress: '1E8cEJRy38LC4sv8P...' // Bitcoin address to send the change to,
-  
+  changeAddress: '1E8cEJRy38LC4sv8P...' // Bitcoin address to send the change to
 }
 
 coinfs.encode('file.txt', options, function(err, transaction) {

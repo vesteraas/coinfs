@@ -36,7 +36,7 @@ module.exports.encode = function (filename, options, callback) {
     throw new Error('options.network should be one of ["bitcoin", "testnet"]')
   }
 
-  if (!options.amount) {
+  if (options.amount === undefined) {
     throw new Error('options.amount parameter is missing')
   }
 
@@ -84,32 +84,32 @@ module.exports.encode = function (filename, options, callback) {
 
       var tx = new bitcoin.TransactionBuilder(bitcoin.networks[options.network])
 
-      for (var n=0; n<options.inputs.length; n++) {
-        if (!options.inputs[n].hash) {
+      for (var i = 0; i < options.inputs.length; i++) {
+        if (!options.inputs[i].hash) {
           return callback(new Error('hash parameter is missing'))
         }
 
-        if (!(typeof options.inputs[n].hash === 'string' || options.inputs[n].hash instanceof String)) {
+        if (!(typeof options.inputs[i].hash === 'string' || options.inputs[i].hash instanceof String)) {
           return callback(new Error('hash parameter should be a string'))
         }
 
-        if (!options.inputs[n].index) {
+        if (options.inputs[i].index === undefined) {
           return callback(new Error('index parameter is missing'))
         }
 
-        if (!(typeof options.inputs[n].index === 'number')) {
+        if (!(typeof options.inputs[i].index === 'number')) {
           return callback(new Error('index parameter should be an integer'))
         }
 
-        if (!options.inputs[n].WIF) {
+        if (!options.inputs[i].WIF) {
           return callback(new Error('WIF is missing'))
         }
 
-        if (!(typeof options.inputs[n].WIF === 'string' || options.inputs[n].WIF instanceof String)) {
+        if (!(typeof options.inputs[i].WIF === 'string' || options.inputs[i].WIF instanceof String)) {
           return callback(new Error('WIF parameter should be a string'))
         }
 
-        tx.addInput(options.inputs[n].hash, options.inputs[n].index)
+        tx.addInput(options.inputs[i].hash, options.inputs[i].index)
       }
 
       var outputCount = 1 + Math.ceil(data.length / 20)
@@ -133,7 +133,7 @@ module.exports.encode = function (filename, options, callback) {
 
       tx.addOutput(address, bitcoin.networks[options.network].dustThreshold)
 
-      for (var i = 0; i < data.length; i += 20) {
+      for (i = 0; i < data.length; i += 20) {
         var subBuffer = new Buffer(data.subarray(i, i + 20))
         subBuffer = Buffer.concat([subBuffer, new Buffer(20 - subBuffer.length)])
 
@@ -144,8 +144,8 @@ module.exports.encode = function (filename, options, callback) {
 
       tx.addOutput(options.changeAddress, options.amount - totalAmount)
 
-      for (var n=0; n<options.inputs.length; n++) {
-        tx.sign(n, bitcoin.ECPair.fromWIF(options.inputs[n].WIF, bitcoin.networks[options.network]))
+      for (i = 0; i < options.inputs.length; i++) {
+        tx.sign(i, bitcoin.ECPair.fromWIF(options.inputs[i].WIF, bitcoin.networks[options.network]))
       }
 
       callback(null, tx.build())
