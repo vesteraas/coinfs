@@ -1,5 +1,6 @@
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
+var pad = require('pad')
 
 // http://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 var calculateTransactionSize = function (inputCount, outputCount) {
@@ -108,7 +109,7 @@ module.exports.encode = function (filename, options, callback) {
       var tx = new bitcoin.TransactionBuilder(bitcoin.networks[options.network])
       tx.addInput(options.input.hash, options.input.index)
 
-      var outputCount = Math.ceil(data.length / 20)
+      var outputCount = 1 + Math.ceil(data.length / 20)
       var outputCost = outputCount * bitcoin.networks[options.network].dustThreshold
 
       // http://bitcoin.stackexchange.com/questions/7537/calculator-for-estimated-tx-fees
@@ -116,23 +117,24 @@ module.exports.encode = function (filename, options, callback) {
 
       var totalAmount = outputCost + calculatedFee
 
+      var version
+
+      if (options.network === 'testnet') {
+        version = 0x6f
+      } else {
+        version = 0x00
+      }
+
+      var info = new Buffer(pad('Length: ' + stats.size, 20))
+      var address = bitcoin.address.toBase58Check(info, version)
+
+      tx.addOutput(address, bitcoin.networks[options.network].dustThreshold)
+
       for (var i = 0; i < data.length; i += 20) {
-        var version
+        var subBuffer = new Buffer(data.subarray(i, i + 20))
+        subBuffer = Buffer.concat([subBuffer, new Buffer(20 - subBuffer.length)])
 
-        if (options.network === 'testnet') {
-          version = 0x6f
-        } else {
-          version = 0x00
-        }
-
-        var buffer = new Buffer(20)
-        data.copy(buffer, 1)
-
-        try {
-          address = bitcoin.address.toBase58Check(buffer, version)
-        } catch (error) {
-          return callback(new Error('Invalid ' + options.network + ' address: ' + address))
-        }
+        address = bitcoin.address.toBase58Check(subBuffer, version)
 
         tx.addOutput(address, bitcoin.networks[options.network].dustThreshold)
       }

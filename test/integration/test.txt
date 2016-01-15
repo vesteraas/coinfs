@@ -1,4 +1,4 @@
-I’ve been working on bitcoin’s design) since 2007. At some point I became convinced there was a way to do this without any trust required at all and couldn’t resist to keep thinking about it.
+I’ve been working on bitcoin’s design) since 2007. At some point I became convinced there was a way to do this without any trust required at all and couldn´t resist to keep thinking about it.
 
 Lost coins only make everyone else’s coins worth slightly more. Think of it as a donation to everyone.
 

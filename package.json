@@ -1,6 +1,6 @@
 {
   "name": "coinfs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Store files in Bitcoin transactions",
   "main": "./src/index.js",
   "scripts": {
@@ -20,7 +20,8 @@
   },
   "keywords": ["bitcoin", "blockchain", "transaction"],
   "dependencies": {
-    "bitcoinjs-lib": "2.1.4"
+    "bitcoinjs-lib": "2.1.4",
+    "pad": "1.0.0"
   },
   "devDependencies": {
     "mocha": "2.3.4",

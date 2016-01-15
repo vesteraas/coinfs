@@ -28,9 +28,9 @@ describe('coinfs', function() {
     coinfs.encode('./test/integration/test.txt', testnet_options, function(err, transaction) {
       assert(err == null)
       assert(transaction.ins.length == 1)
-      assert(transaction.outs.length == 29)
+      assert(transaction.outs.length == 30)
       assert(transaction.outs[0].value == 546)
-      assert(transaction.outs[28].value == 49925612)
+      assert(transaction.outs[29].value == 49923366)
       done()
     })
   })
@@ -39,9 +39,9 @@ describe('coinfs', function() {
     coinfs.encode('./test/integration/test.txt', bitcoin_options, function(err, transaction) {
       assert(err == null)
       assert(transaction.ins.length == 1)
-      assert(transaction.outs.length == 29)
+      assert(transaction.outs.length == 30)
       assert(transaction.outs[0].value == 546)
-      assert(transaction.outs[28].value == 49925612)
+      assert(transaction.outs[29].value == 49923366)
       done()
     })
   })
