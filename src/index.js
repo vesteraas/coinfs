@@ -1,8 +1,11 @@
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
+var TransactionBuilder = bitcoin.TransactionBuilder
+var address = bitcoin.address
+var networks = bitcoin.networks
+var ECPair = bitcoin.ECPair
 var pad = require('pad')
 
-// http://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 var calculateTransactionSize = function (inputCount, outputCount) {
   return (inputCount * 180) + (outputCount * 34) + 10 + 40
 }
@@ -73,7 +76,7 @@ module.exports.encode = function (filename, options, callback) {
       return callback(err)
     }
 
-    if (stats.size > 10240) {
+    if (stats.size > 40960) {
       return callback(new Error('File is too big'))
     }
 
@@ -82,7 +85,7 @@ module.exports.encode = function (filename, options, callback) {
         return callback(err)
       }
 
-      var tx = new bitcoin.TransactionBuilder(bitcoin.networks[options.network])
+      var tx = new TransactionBuilder(networks[options.network])
 
       for (var i = 0; i < options.inputs.length; i++) {
         if (!options.inputs[i].hash) {
@@ -113,39 +116,33 @@ module.exports.encode = function (filename, options, callback) {
       }
 
       var outputCount = 1 + Math.ceil(data.length / 20)
-      var outputCost = outputCount * bitcoin.networks[options.network].dustThreshold
+      var dustThreshold = networks[options.network].dustThreshold;
+      var outputCost = outputCount * dustThreshold
 
-      // http://bitcoin.stackexchange.com/questions/7537/calculator-for-estimated-tx-fees
       var calculatedFee = 50 * calculateTransactionSize(1, outputCount)
 
       var totalAmount = outputCost + calculatedFee
 
-      var version
-
-      if (options.network === 'testnet') {
-        version = 0x6f
-      } else {
-        version = 0x00
-      }
+      var version = options.network === 'testnet' ? 0x6f : 0x00
 
       var info = new Buffer(pad('Length: ' + stats.size, 20))
-      var address = bitcoin.address.toBase58Check(info, version)
-
-      tx.addOutput(address, bitcoin.networks[options.network].dustThreshold)
+      tx.addOutput(address.toBase58Check(info, version), dustThreshold)
 
       for (i = 0; i < data.length; i += 20) {
         var subBuffer = new Buffer(data.subarray(i, i + 20))
         subBuffer = Buffer.concat([subBuffer, new Buffer(20 - subBuffer.length)])
 
-        address = bitcoin.address.toBase58Check(subBuffer, version)
-
-        tx.addOutput(address, bitcoin.networks[options.network].dustThreshold)
+        tx.addOutput(address.toBase58Check(subBuffer, version), dustThreshold)
       }
 
-      tx.addOutput(options.changeAddress, options.amount - totalAmount)
+      var change = options.amount - totalAmount
+
+      if (change >= dustThreshold) {
+        tx.addOutput(options.changeAddress, options.amount - totalAmount)
+      }
 
       for (i = 0; i < options.inputs.length; i++) {
-        tx.sign(i, bitcoin.ECPair.fromWIF(options.inputs[i].WIF, bitcoin.networks[options.network]))
+        tx.sign(i, ECPair.fromWIF(options.inputs[i].WIF, networks[options.network]))
       }
 
       callback(null, tx.build())
