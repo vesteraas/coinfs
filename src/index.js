@@ -116,7 +116,7 @@ module.exports.encode = function (filename, options, callback) {
       }
 
       var outputCount = 1 + Math.ceil(data.length / 20)
-      var dustThreshold = networks[options.network].dustThreshold;
+      var dustThreshold = networks[options.network].dustThreshold
       var outputCost = outputCount * dustThreshold
 
       var calculatedFee = 50 * calculateTransactionSize(1, outputCount)
@@ -135,10 +135,10 @@ module.exports.encode = function (filename, options, callback) {
         tx.addOutput(address.toBase58Check(subBuffer, version), dustThreshold)
       }
 
-      var change = options.amount - totalAmount
+      var change = parseInt(options.amount, 10) - totalAmount
 
       if (change >= dustThreshold) {
-        tx.addOutput(options.changeAddress, options.amount - totalAmount)
+        tx.addOutput(options.changeAddress, change)
       }
 
       for (i = 0; i < options.inputs.length; i++) {

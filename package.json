@@ -1,6 +1,6 @@
 {
   "name": "coinfs",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Store files in Bitcoin transactions",
   "main": "./src/index.js",
   "scripts": {
