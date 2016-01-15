@@ -44,28 +44,12 @@ module.exports.encode = function (filename, options, callback) {
     throw new Error('options.amount parameter should be a numeric value')
   }
 
-  if (!options.input) {
-    throw new Error('options.input parameter is missing')
+  if (!options.inputs) {
+    throw new Error('options.inputs parameter is missing')
   }
 
-  if (typeof options.input !== 'object') {
-    throw new Error('options.input parameter should be an object')
-  }
-
-  if (!options.input.hash) {
-    throw new Error('options.input.hash parameter is missing')
-  }
-
-  if (!(typeof options.input.hash === 'string' || options.input.hash instanceof String)) {
-    throw new Error('options.input.hash parameter should be a string')
-  }
-
-  if (!options.input.index) {
-    throw new Error('options.input.index parameter is missing')
-  }
-
-  if (!(typeof options.input.index === 'number')) {
-    throw new Error('options.input.index parameter should be an integer')
+  if (!options.inputs instanceof Array) {
+    throw new Error('options.inputs parameter should be an array')
   }
 
   if (!options.changeAddress) {
@@ -73,14 +57,6 @@ module.exports.encode = function (filename, options, callback) {
   }
 
   if (!(typeof options.changeAddress === 'string' || options.changeAddress instanceof String)) {
-    throw new Error('options.changeAddress parameter should be a string')
-  }
-
-  if (!options.WIF) {
-    throw new Error('options.WIF is missing')
-  }
-
-  if (!(typeof options.WIF === 'string' || options.WIF instanceof String)) {
     throw new Error('options.changeAddress parameter should be a string')
   }
 
@@ -107,7 +83,34 @@ module.exports.encode = function (filename, options, callback) {
       }
 
       var tx = new bitcoin.TransactionBuilder(bitcoin.networks[options.network])
-      tx.addInput(options.input.hash, options.input.index)
+
+      for (var n=0; n<options.inputs.length; n++) {
+        if (!options.inputs[n].hash) {
+          return callback(new Error('hash parameter is missing'))
+        }
+
+        if (!(typeof options.inputs[n].hash === 'string' || options.inputs[n].hash instanceof String)) {
+          return callback(new Error('hash parameter should be a string'))
+        }
+
+        if (!options.inputs[n].index) {
+          return callback(new Error('index parameter is missing'))
+        }
+
+        if (!(typeof options.inputs[n].index === 'number')) {
+          return callback(new Error('index parameter should be an integer'))
+        }
+
+        if (!options.inputs[n].WIF) {
+          return callback(new Error('WIF is missing'))
+        }
+
+        if (!(typeof options.inputs[n].WIF === 'string' || options.inputs[n].WIF instanceof String)) {
+          return callback(new Error('WIF parameter should be a string'))
+        }
+
+        tx.addInput(options.inputs[n].hash, options.inputs[n].index)
+      }
 
       var outputCount = 1 + Math.ceil(data.length / 20)
       var outputCost = outputCount * bitcoin.networks[options.network].dustThreshold
@@ -141,7 +144,9 @@ module.exports.encode = function (filename, options, callback) {
 
       tx.addOutput(options.changeAddress, options.amount - totalAmount)
 
-      tx.sign(0, bitcoin.ECPair.fromWIF(options.WIF, bitcoin.networks[options.network]))
+      for (var n=0; n<options.inputs.length; n++) {
+        tx.sign(n, bitcoin.ECPair.fromWIF(options.inputs[n].WIF, bitcoin.networks[options.network]))
+      }
 
       callback(null, tx.build())
     })

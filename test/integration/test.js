@@ -4,23 +4,23 @@ var coinfs = require('../../')
 var testnet_options = {
   network: 'testnet',
   amount: 0.5 * 100000000,
-  input: {
+  inputs: [{
     hash: '1d3090c1ecaecc803f3aca40c00d8bdb08611737f8442f471d41ffd567fe50bf',
-    index: 1
-  },
-  changeAddress: 'mmXQanoYFKibMdZyDcRwBbmsgk3QoGQVTf',
-  WIF: '92XBSethZZLnQEVwv3CiRq86AeVp6ya9zE58Kv2SaWioX7NkXMA'
+    index: 1,
+    WIF: '92XBSethZZLnQEVwv3CiRq86AeVp6ya9zE58Kv2SaWioX7NkXMA'
+  }],
+  changeAddress: 'mmXQanoYFKibMdZyDcRwBbmsgk3QoGQVTf'
 }
 
 var bitcoin_options = {
   network: 'bitcoin',
   amount: 0.5 * 100000000,
-  input: {
+  inputs: [{
     hash: 'a5b8da60259ad3a800aebd76f71848fd73cb1b823cc4e6f39c3a9eb55ad04882',
-    index: 1
-  },
-  changeAddress: '1E8cEJRy38LC4sv8PMaALo8C43CjBDe1Ho',
-  WIF: '5J115WhqnVmZuD1xe4jc1g24FBJTc2Rh8onNnkQA8cM3jK6c6jH'
+    index: 1,
+    WIF: '5J115WhqnVmZuD1xe4jc1g24FBJTc2Rh8onNnkQA8cM3jK6c6jH'
+  }],
+  changeAddress: '1E8cEJRy38LC4sv8PMaALo8C43CjBDe1Ho'
 }
 
 describe('coinfs', function() {
