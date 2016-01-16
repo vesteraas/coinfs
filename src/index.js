@@ -1,5 +1,6 @@
 var fs = require('fs')
 var bitcoin = require('bitcoinjs-lib')
+var bitcore = require('bitcore-lib')
 var TransactionBuilder = bitcoin.TransactionBuilder
 var address = bitcoin.address
 var networks = bitcoin.networks
@@ -148,4 +149,59 @@ module.exports.encode = function (filename, options, callback) {
       callback(null, tx.build())
     })
   })
+}
+
+module.exports.decode = function (rawTransaction, network, callback) {
+  if (!rawTransaction) {
+    throw new Error('raw parameter is missing')
+  }
+
+  if (!(typeof rawTransaction === 'string' || rawTransaction instanceof String)) {
+    throw new Error('raw parameter should be a string')
+  }
+
+  if (!network) {
+    throw new Error('network parameter is missing')
+  }
+
+  if (!(typeof network === 'string' || network instanceof String)) {
+    throw new Error('network parameter should be a string')
+  }
+
+  if (!callback) {
+    throw new Error('callback parameter is missing')
+  }
+
+  if (typeof callback !== 'function') {
+    throw new Error('callback parameter should be a function')
+  }
+
+  try {
+    var transaction = new bitcore.Transaction(rawTransaction)
+
+    var script = transaction.outputs[0].script
+    var metaData = bitcore.Address.fromScript(script, bitcore.Networks[network]).hashBuffer.toString()
+
+    if (metaData.indexOf('Length:') === -1) {
+      return callback(new Error('Invalid metadata'))
+    }
+
+    var size = parseInt(metaData.trim().split(': ')[1], 10)
+
+    if (isNaN(size)) {
+      return callback(new Error('Invalid metadata'))
+    }
+
+    var total = new Buffer(0)
+    for (var n = 1; n < transaction.outputs.length; n++) {
+      var metaDataAddress = bitcore.Address.fromScript(transaction.outputs[n].script, bitcore.Networks[network])
+      if (transaction.outputs[n].satoshis === 546) {
+        total = Buffer.concat([total, bitcoin.address.fromBase58Check(metaDataAddress.toString()).hash])
+      }
+    }
+
+    callback(null, total.slice(0, size))
+  } catch (error) {
+    return callback(new Error(error))
+  }
 }
