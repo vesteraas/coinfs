@@ -255,7 +255,7 @@ module.exports.decode = function (rawTransaction, network, callback) {
 
   if (typeof callback !== 'function') {
     throw new Error('callback parameter should be a function')
-  }8
+  }
 
   try {
     var transaction = new bitcore.Transaction(rawTransaction)
