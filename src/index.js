@@ -6,9 +6,79 @@ var address = bitcoin.address
 var networks = bitcoin.networks
 var ECPair = bitcoin.ECPair
 var pad = require('pad')
+var defaultDust = 2730
 
 var calculateTransactionSize = function (inputCount, outputCount) {
-  return (inputCount * 180) + (outputCount * 34) + 10 + 40
+  return (inputCount * 180) + (outputCount * 34) + 10 + inputCount
+}
+
+module.exports.estimateCost = function (filename, options, callback) {
+  if (!filename) {
+    throw new Error('filename parameter is missing')
+  }
+
+  if (!(typeof filename === 'string' || filename instanceof String)) {
+    throw new Error('filename parameter should be a string')
+  }
+
+  if (!options) {
+    throw new Error('options parameter is missing')
+  }
+
+  if (typeof options !== 'object') {
+    throw new Error('options parameter should be an object')
+  }
+
+  if (!options.network) {
+    throw new Error('options.network parameter is missing')
+  }
+
+  if (!(typeof options.network === 'string' || options.network instanceof String)) {
+    throw new Error('options.network parameter should be a string')
+  }
+
+  if (options.network !== 'bitcoin' && options.network !== 'testnet') {
+    throw new Error('options.network should be one of ["bitcoin", "testnet"]')
+  }
+
+  if (options.dust && typeof options.dust !== 'number') {
+    throw new Error('options.dust should be a number')
+  }
+
+  if (!callback) {
+    throw new Error('callback parameter is missing')
+  }
+
+  if (typeof callback !== 'function') {
+    throw new Error('callback parameter should be a function')
+  }
+
+  fs.stat(filename, function (err, stats) {
+    if (err) {
+      return callback(err)
+    }
+
+    if (stats.size > 40960) {
+      return callback(new Error('File is too big'))
+    }
+
+    fs.readFile(filename, function (err, data) {
+      if (err) {
+        return callback(err)
+      }
+
+      var dust = options.dust ? parseInt(options.dust, 10) : defaultDust
+
+      var outputCount = 2 + Math.ceil(data.length / 20)
+      var outputCost = outputCount * dust
+
+      var calculatedFee = 50 * calculateTransactionSize(options.inputs, outputCount)
+
+      var totalAmount = outputCost + calculatedFee
+
+      callback(null, totalAmount)
+    })
+  })
 }
 
 module.exports.encode = function (filename, options, callback) {
@@ -40,12 +110,8 @@ module.exports.encode = function (filename, options, callback) {
     throw new Error('options.network should be one of ["bitcoin", "testnet"]')
   }
 
-  if (options.amount === undefined) {
-    throw new Error('options.amount parameter is missing')
-  }
-
-  if (!(typeof options.amount === 'number')) {
-    throw new Error('options.amount parameter should be a numeric value')
+  if (options.dust && typeof options.dust !== 'number') {
+    throw new Error('options.dust should be a number')
   }
 
   if (!options.inputs) {
@@ -105,6 +171,14 @@ module.exports.encode = function (filename, options, callback) {
           return callback(new Error('index parameter should be an integer'))
         }
 
+        if (options.inputs[i].amount === undefined) {
+          throw new Error('amount parameter is missing')
+        }
+
+        if (!(typeof options.inputs[i].amount === 'number')) {
+          throw new Error('amount parameter should be a numeric value')
+        }
+
         if (!options.inputs[i].WIF) {
           return callback(new Error('WIF is missing'))
         }
@@ -116,9 +190,10 @@ module.exports.encode = function (filename, options, callback) {
         tx.addInput(options.inputs[i].hash, options.inputs[i].index)
       }
 
-      var outputCount = 1 + Math.ceil(data.length / 20)
-      var dustThreshold = networks[options.network].dustThreshold
-      var outputCost = outputCount * dustThreshold
+      var dust = options.dust ? parseInt(options.dust, 10) : defaultDust
+
+      var outputCount = 2 + Math.ceil(data.length / 20)
+      var outputCost = outputCount * dust
 
       var calculatedFee = 50 * calculateTransactionSize(1, outputCount)
 
@@ -127,18 +202,24 @@ module.exports.encode = function (filename, options, callback) {
       var version = options.network === 'testnet' ? 0x6f : 0x00
 
       var info = new Buffer(pad('Length: ' + stats.size, 20))
-      tx.addOutput(address.toBase58Check(info, version), dustThreshold)
+      tx.addOutput(address.toBase58Check(info, version), dust)
 
       for (i = 0; i < data.length; i += 20) {
         var subBuffer = new Buffer(data.subarray(i, i + 20))
         subBuffer = Buffer.concat([subBuffer, new Buffer(20 - subBuffer.length)])
 
-        tx.addOutput(address.toBase58Check(subBuffer, version), dustThreshold)
+        tx.addOutput(address.toBase58Check(subBuffer, version), dust)
       }
 
-      var change = parseInt(options.amount, 10) - totalAmount
+      var amount = 0
 
-      if (change >= dustThreshold) {
+      for (i = 0; i < options.inputs.length; i++) {
+        amount += parseInt(options.inputs[i].amount, 10)
+      }
+
+      var change = amount - totalAmount
+
+      if (change >= dust) {
         tx.addOutput(options.changeAddress, change)
       }
 
@@ -174,7 +255,7 @@ module.exports.decode = function (rawTransaction, network, callback) {
 
   if (typeof callback !== 'function') {
     throw new Error('callback parameter should be a function')
-  }
+  }8
 
   try {
     var transaction = new bitcore.Transaction(rawTransaction)
