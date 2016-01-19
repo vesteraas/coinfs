@@ -37,6 +37,7 @@ var options = {
     amount: 50000000,            		// Satoshis in TX output,
     WIF: '5J115WhqnVmZuD1xe4jc1g...'    // Private key of output address
   }],
+  additionalFee: 50000,                 // Optional
   changeAddress: '1E8cEJRy38LC4sv8P...' // Bitcoin address to send the change to
 }
 

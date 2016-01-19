@@ -12,6 +12,18 @@ var testnet_options = {
   changeAddress: 'mmXQanoYFKibMdZyDcRwBbmsgk3QoGQVTf'
 }
 
+var testnet_options_with_additional_fee = {
+  network: 'testnet',
+  additionalFee: 250000,
+  inputs: [{
+    hash: '1d3090c1ecaecc803f3aca40c00d8bdb08611737f8442f471d41ffd567fe50bf',
+    index: 1,
+    amount: 0.5 * 100000000,
+    WIF: '92XBSethZZLnQEVwv3CiRq86AeVp6ya9zE58Kv2SaWioX7NkXMA'
+  }],
+  changeAddress: 'mmXQanoYFKibMdZyDcRwBbmsgk3QoGQVTf'
+}
+
 var bitcoin_options = {
   network: 'bitcoin',
   inputs: [{
@@ -74,6 +86,16 @@ describe('coinfs', function() {
     })
   })
 
+  it('can generate a transaction for testnet with additional fee', function(done) {
+    coinfs.encode('./test/integration/test.txt', testnet_options_with_additional_fee, function(err, transaction) {
+      assert(err == null)
+      assert(transaction.ins.length == 1)
+      assert(transaction.outs.length == 30)
+      assert(transaction.outs[29].value == 49807550)
+      done()
+    })
+  })
+
   it('can generate a transaction for bitcoin', function(done) {
     coinfs.encode('./test/integration/test.txt', bitcoin_options, function(err, transaction) {
       assert(err == null)
@@ -122,8 +144,8 @@ describe('coinfs', function() {
   })
 
   it('can decode a transaction for bitcoin', function(done) {
-    var raw = '010000000125f5b084dd5a6e8e055ac0425eb7550dffa062bd95ac378a3dca3158ea7b3a49010000008b483045022100a31e555ef76cc7630304f1bf159d1ec2a92e418a52a2c69d5cf44e7334d4fb1302206bdf39934a5ee0525bb42f8a34492d99cc6b56ac7a747cced37a01b79514fd4b01410430d380e0fe875d5f0ab8f7259519dce700e65c226821b2b3b46d0c49addad507dc553fdcc3794f4d5233f5ac470d608aefc30595db223c36e06b8790d36e3f22ffffffff0822020000000000001976a9144c656e6774683a2031303420202020202020202088ac22020000000000001976a9144c6f737420636f696e73206f6e6c79206d616b6588ac22020000000000001976a9142065766572796f6e6520656c7365e2809973206388ac22020000000000001976a9146f696e7320776f72746820736c696768746c792088ac22020000000000001976a9146d6f72652e205468696e6b206f6620697420617388ac22020000000000001976a914206120646f6e6174696f6e20746f20657665727988ac22020000000000001976a9146f6e652e0100000000000000e88b01030100000088ac2a86fa02000000001976a9148700b356a49dea54717614bb3588ff1eb965bbfe88ac00000000'
-    coinfs.decode(raw, 'testnet', function(err, data) {
+    var raw = '0100000001bf50fe67d5ff411d472f44f837176108db8b0dc040ca3a3f80ccaeecc190301d010000008b483045022100fe4eaffbadc8e85b2e58a802cddfd96ee35a74049eb6f1defa29c4d4af7ea6a00220655decdc7a8256121930ca842e34b7b0dc3d301b0a1046e85639267fe420eebd01410417dfbca7d8af86a7a80b95382124445ee00fb6d764c7db87bacf00344f9b08070d15d7e0dd7513932f24dc3b8c83821d094fb6d58f1bc2508bac16e032749f4cffffffff08aa0a0000000000001976a9142020202020202020204c656e6774683a2031303488acaa0a0000000000001976a9144c6f737420636f696e73206f6e6c79206d616b6588acaa0a0000000000001976a9142065766572796f6e6520656c7365e2809973206388acaa0a0000000000001976a9146f696e7320776f72746820736c696768746c792088acaa0a0000000000001976a9146d6f72652e205468696e6b206f6620697420617388acaa0a0000000000001976a914206120646f6e6174696f6e20746f20657665727988acaa0a0000000000001976a9146f6e652e41000000b90100003f000000d401000088acc240fa02000000001976a91441e6b30483345b6fe6ebcedf3aa535eaf02058dc88ac00000000'
+    coinfs.decode(raw, testnet_options, function(err, data) {
       assert(data.toString() === 'Lost coins only make everyone else’s coins worth slightly more. Think of it as a donation to everyone.')
       done()
     })

@@ -5,7 +5,6 @@ var TransactionBuilder = bitcoin.TransactionBuilder
 var address = bitcoin.address
 var networks = bitcoin.networks
 var ECPair = bitcoin.ECPair
-var pad = require('pad')
 var defaultDust = 2730
 
 var calculateTransactionSize = function (inputCount, outputCount) {
@@ -110,6 +109,10 @@ module.exports.encode = function (filename, options, callback) {
     throw new Error('options.network should be one of ["bitcoin", "testnet"]')
   }
 
+  if (options.additionalFee && typeof options.additionalFee !== 'number') {
+    throw new Error('options.additionalFee should be a number')
+  }
+
   if (options.dust && typeof options.dust !== 'number') {
     throw new Error('options.dust should be a number')
   }
@@ -196,12 +199,13 @@ module.exports.encode = function (filename, options, callback) {
       var outputCost = outputCount * dust
 
       var calculatedFee = 50 * calculateTransactionSize(1, outputCount)
+      var additionalFee = options.additionalFee ? parseInt(options.additionalFee, 10) : 0
 
-      var totalAmount = outputCost + calculatedFee
+      var totalAmount = outputCost + calculatedFee + additionalFee
 
       var version = options.network === 'testnet' ? 0x6f : 0x00
 
-      var info = new Buffer(pad('Length: ' + stats.size, 20))
+      var info = new Buffer('             Length: ' + stats.size).slice(-20)
       tx.addOutput(address.toBase58Check(info, version), dust)
 
       for (i = 0; i < data.length; i += 20) {
@@ -232,7 +236,7 @@ module.exports.encode = function (filename, options, callback) {
   })
 }
 
-module.exports.decode = function (rawTransaction, network, callback) {
+module.exports.decode = function (rawTransaction, options, callback) {
   if (!rawTransaction) {
     throw new Error('raw parameter is missing')
   }
@@ -241,12 +245,28 @@ module.exports.decode = function (rawTransaction, network, callback) {
     throw new Error('raw parameter should be a string')
   }
 
-  if (!network) {
-    throw new Error('network parameter is missing')
+  if (!options) {
+    throw new Error('options parameter is missing')
   }
 
-  if (!(typeof network === 'string' || network instanceof String)) {
-    throw new Error('network parameter should be a string')
+  if (typeof options !== 'object') {
+    throw new Error('options parameter should be an object')
+  }
+
+  if (!options.network) {
+    throw new Error('options.network parameter is missing')
+  }
+
+  if (!(typeof options.network === 'string' || options.network instanceof String)) {
+    throw new Error('options.network parameter should be a string')
+  }
+
+  if (options.network !== 'bitcoin' && options.network !== 'testnet') {
+    throw new Error('options.network should be one of ["bitcoin", "testnet"]')
+  }
+
+  if (options.dust && typeof options.dust !== 'number') {
+    throw new Error('options.dust should be a number')
   }
 
   if (!callback) {
@@ -261,7 +281,7 @@ module.exports.decode = function (rawTransaction, network, callback) {
     var transaction = new bitcore.Transaction(rawTransaction)
 
     var script = transaction.outputs[0].script
-    var metaData = bitcore.Address.fromScript(script, bitcore.Networks[network]).hashBuffer.toString()
+    var metaData = bitcore.Address.fromScript(script, bitcore.Networks[options.network]).hashBuffer.toString()
 
     if (metaData.indexOf('Length:') === -1) {
       return callback(new Error('Invalid metadata'))
@@ -273,10 +293,12 @@ module.exports.decode = function (rawTransaction, network, callback) {
       return callback(new Error('Invalid metadata'))
     }
 
+    var dust = options.dust ? parseInt(options.dust, 10) : defaultDust
+
     var total = new Buffer(0)
     for (var n = 1; n < transaction.outputs.length; n++) {
-      var metaDataAddress = bitcore.Address.fromScript(transaction.outputs[n].script, bitcore.Networks[network])
-      if (transaction.outputs[n].satoshis === 546) {
+      var metaDataAddress = bitcore.Address.fromScript(transaction.outputs[n].script, bitcore.Networks[options.network])
+      if (transaction.outputs[n].satoshis === dust) {
         total = Buffer.concat([total, bitcoin.address.fromBase58Check(metaDataAddress.toString()).hash])
       }
     }
